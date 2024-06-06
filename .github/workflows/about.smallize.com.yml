@@ -1,0 +1,34 @@
+name: about.smallize.com
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout theme repo
+      uses: actions/checkout@v4
+      with:
+          repository: smallize/smallize
+          token: ${{ secrets.REPO_TOKEN }}
+          fetch-depth: 0 
+          submodules: true
+    - name: Setup Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+          hugo-version: 'latest'
+          extended: true
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - name: Install autoprefixer
+      run: npm install -D --save autoprefixer
+    - name: Install postcss-cli
+      run: npm install -D --save postcss-cli
+    - name: Build 
+      run: hugo --config "configs/about.smallize.com.toml","configs/common.smallize.com.toml" -b "https://about.smallize.com" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
+    - name: Deploy
+      run: hugo deploy --config "configs/about.smallize.com.toml" --maxDeletes=-1 --target "production" --invalidateCDN --force
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
