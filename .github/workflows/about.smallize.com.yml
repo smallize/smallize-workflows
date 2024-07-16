@@ -35,12 +35,12 @@ jobs:
       id: base-url
       run: |
         if [ "${{ github.event.inputs.environment }}" = "production" ]; then
-          echo "::set-output name=url::https://about.smallize.com"
+          echo "url=https://about.smallize.com" >> $GITHUB_ENV
         else
-          echo "::set-output name=url::https://about-qa.smallize.com"
+          echo "url=https://about-qa.smallize.com" >> $GITHUB_ENV
         fi
     - name: Build 
-      run: hugo --config "configs/about.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ steps.base-url.outputs.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
+      run: hugo --config "configs/about.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ env.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
     - name: Deploy
       run: hugo deploy --config "configs/about.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --invalidateCDN --force
       env:
