@@ -1,0 +1,25 @@
+name: brands.smallize.com
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout theme repo
+      uses: actions/checkout@v4
+      with:
+          repository: smallize/smallize
+          token: ${{ secrets.REPO_TOKEN }}
+          fetch-depth: 0 
+    - name: Setup Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+          hugo-version: 'latest'
+          extended: true
+    - name: Build 
+      run: hugo --config "configs/brands.smallize.com.toml","configs/common.smallize.com.toml" -b "https://brands.smallize.com" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
+    - name: Deploy
+      run: hugo deploy --config "configs/brands.smallize.com.toml" --maxDeletes=-1 --target "production" --invalidateCDN --force
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
