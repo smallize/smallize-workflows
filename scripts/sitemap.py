@@ -106,7 +106,7 @@ def main():
         return
 
     # List of domain names, subdomains, and TLDs
-    domains = ["documentize", "sheetize", "barcodize", "ocrize", "imagise", "slidize", "psdize", "smallize"]
+    domains = ["documentize", "sheetize", "barcodize", "ocrize", "imagise", "slidize", "psdize", "smallize", "omrquiz"]
     subdomains = ["brands", "products", "blog", "docs", "reference", "releases", "www"]
     tlds = ["com"]
 
