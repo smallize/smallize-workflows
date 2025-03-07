@@ -108,7 +108,7 @@ def main():
     # List of domain names, subdomains, and TLDs
     domains = ["documentize", "sheetize", "barcodize", "ocrize", "imagise", "slidize", "psdize", "smallize", "omrquiz"]
     subdomains = ["brands", "products", "blog", "docs", "reference", "releases", "www"]
-    tlds = ["com"]
+    tlds = ["com", "cloud", "ai", "app"]
 
     # Process each subdomain and submit sitemaps
     for subdomain in subdomains:
