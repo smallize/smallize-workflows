@@ -41,10 +41,8 @@ jobs:
 
     - name: Deploy (Ceph)
       if: ${{ github.event.inputs.environment == 'staging' }}
-      run: |
-        aws s3 sync ./public s3://qa-smallize-com \
-          --endpoint-url ${{ secrets.CEPH_ENDPOINT }} \
-          --delete
+      run: | 
+        hugo deploy --config "configs/www.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --force
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
