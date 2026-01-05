@@ -40,9 +40,9 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
 
     - name: Deploy (Ceph)
-      if: ${{ github.event.inputs.environment == 'staging_ceph' }}
+      if: ${{ github.event.inputs.environment == 'staging' }}
       run: | 
-        hugo deploy --config "configs/www.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --force
+        hugo deploy --config "configs/www.smallize.com.toml" --maxDeletes=-1 --target 'staging_ceph' --force
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
