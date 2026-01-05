@@ -33,8 +33,19 @@ jobs:
         fi
     - name: Build 
       run: hugo --config "configs/www.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ steps.base-url.outputs.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
-    - name: Deploy
+    - name: Deploy (AWS)
       run: hugo deploy --config "configs/www.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --invalidateCDN --force
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
+
+    - name: Deploy (Ceph)
+      if: ${{ github.event.inputs.environment == 'staging' }}
+      run: |
+        aws s3 sync ./public s3://qa-smallize-com \
+          --endpoint-url https://s3-admin.dynabic.com \
+          --delete
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
