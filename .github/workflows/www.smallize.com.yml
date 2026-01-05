@@ -43,7 +43,7 @@ jobs:
       if: ${{ github.event.inputs.environment == 'staging' }}
       run: |
         aws s3 sync ./public s3://qa-smallize-com \
-          --endpoint-url https://s3-admin.dynabic.com \
+          --endpoint-url ${{ secrets.CEPH_ENDPOINT }} \
           --delete
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
