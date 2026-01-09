@@ -53,3 +53,22 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ABOUT_QA_SMALLIZE_COM_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_ABOUT_QA_SMALLIZE_COM_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
+
+    - name: Deploy to Ceph (production)
+      if: ${{ github.event.inputs.environment == 'production' }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_SMALLIZE_FAMILY_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SMALLIZE_FAMILY_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+      run: |
+        echo "Deploying to Ceph production..."
+        if hugo deploy --config "configs/about.smallize.com.toml" --target "production_ceph" --force; then
+          echo "Hugo deploy to Ceph succeeded"
+        else
+          echo "Hugo deploy failed, falling back to AWS CLI..."
+          aws s3 sync public/ "s3://about-smallize-com/" \
+            --endpoint-url "https://s3.dynabic.com" \
+            --region "us-east-1" \
+            --delete
+          echo "AWS CLI deployment completed"
+        fi
