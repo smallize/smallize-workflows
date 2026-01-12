@@ -1,6 +1,12 @@
 name: brands.smallize.com
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: environment
+        default: staging
+        required: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -10,16 +16,52 @@ jobs:
       with:
           repository: smallize/smallize
           token: ${{ secrets.REPO_TOKEN }}
-          fetch-depth: 0 
+          fetch-depth: 0
+          submodules: true
     - name: Setup Hugo
       uses: peaceiris/actions-hugo@v2
       with:
           hugo-version: '0.135.0'
           extended: true
-    - name: Build 
-      run: hugo --config "configs/brands.smallize.com.toml","configs/common.smallize.com.toml" -b "https://brands.smallize.com" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
-    - name: Deploy
-      run: hugo deploy --config "configs/brands.smallize.com.toml" --maxDeletes=-1 --target "production" --invalidateCDN --force
+    - name: Determine Base URL
+      id: base-url
+      run: |
+        if [ "${{ github.event.inputs.environment }}" = "production" ]; then
+          echo "::set-output name=url::https://brands.smallize.com"
+        else
+          echo "::set-output name=url::https://brands-qa.smallize.com"
+        fi
+    - name: Build
+      run: hugo --config "configs/brands.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ steps.base-url.outputs.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
+    - name: Deploy (AWS)
+      run: hugo deploy --config "configs/brands.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --invalidateCDN --force
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
+
+    - name: Deploy to Ceph (staging only)
+      if: ${{ github.event.inputs.environment == 'staging' }}
+      run: hugo deploy --config "configs/brands.smallize.com.toml" --target "staging_ceph" --force
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_SMALLIZE_FAMILY_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SMALLIZE_FAMILY_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+
+    - name: Deploy to Ceph (production)
+      if: ${{ github.event.inputs.environment == 'production' }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_SMALLIZE_FAMILY_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SMALLIZE_FAMILY_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+      run: |
+        echo "Deploying to Ceph production..."
+        if hugo deploy --config "configs/brands.smallize.com.toml" --target "production_ceph" --force; then
+          echo "Hugo deploy to Ceph succeeded"
+        else
+          echo "Hugo deploy failed, falling back to AWS CLI..."
+          aws s3 sync public/ "s3://brands-smallize-com/" \
+            --endpoint-url "https://s3.dynabic.com" \
+            --region "us-east-1" \
+            --delete
+          echo "AWS CLI deployment completed"
+        fi
