@@ -20,11 +20,6 @@ jobs:
         hugo version
     - name: Build
       run: hugo --config "configs/brand.smallize.com.toml","configs/common.smallize.com.toml" -b "https://brand.smallize.com" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
-    - name: Deploy (AWS)
-      run: hugo deploy --config "configs/brand.smallize.com.toml" --maxDeletes=-1 --target "production" --invalidateCDN --force
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
 
     - name: Deploy to Ceph (production)
       env:
