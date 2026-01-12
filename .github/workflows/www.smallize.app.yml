@@ -19,10 +19,11 @@ jobs:
           fetch-depth: 0 
           submodules: true
     - name: Setup Hugo
-      uses: peaceiris/actions-hugo@v2
-      with:
-          hugo-version: 'latest'
-          extended: true
+      run: |
+        wget https://github.com/gohugoio/hugo/releases/download/v0.140.2/hugo_extended_withdeploy_0.140.2_linux-amd64.tar.gz
+        tar -xzf hugo_extended_withdeploy_0.140.2_linux-amd64.tar.gz
+        sudo mv hugo /usr/local/bin/
+        hugo version
     - name: Determine Base URL
       id: base-url
       run: |

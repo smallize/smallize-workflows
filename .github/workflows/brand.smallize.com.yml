@@ -13,10 +13,11 @@ jobs:
           fetch-depth: 0
           submodules: true
     - name: Setup Hugo
-      uses: peaceiris/actions-hugo@v2
-      with:
-          hugo-version: '0.135.0'
-          extended: true
+      run: |
+        wget https://github.com/gohugoio/hugo/releases/download/v0.140.2/hugo_extended_withdeploy_0.140.2_linux-amd64.tar.gz
+        tar -xzf hugo_extended_withdeploy_0.140.2_linux-amd64.tar.gz
+        sudo mv hugo /usr/local/bin/
+        hugo version
     - name: Build
       run: hugo --config "configs/brand.smallize.com.toml","configs/common.smallize.com.toml" -b "https://brand.smallize.com" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
     - name: Deploy (AWS)
