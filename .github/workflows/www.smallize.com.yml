@@ -16,7 +16,7 @@ jobs:
       with:
           repository: smallize/smallize
           token: ${{ secrets.REPO_TOKEN }}
-          fetch-depth: 0 
+          fetch-depth: 0
           submodules: true
     - name: Setup Hugo
       uses: peaceiris/actions-hugo@v2
@@ -31,7 +31,7 @@ jobs:
         else
           echo "::set-output name=url::https://qa.smallize.com"
         fi
-    - name: Build 
+    - name: Build
       run: hugo --config "configs/www.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ steps.base-url.outputs.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
     - name: Deploy (AWS)
       run: hugo deploy --config "configs/www.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --invalidateCDN --force
@@ -41,27 +41,131 @@ jobs:
 
     - name: Deploy to Ceph (staging only)
       if: ${{ github.event.inputs.environment == 'staging' }}
-      run: hugo deploy --config "configs/www.smallize.com.toml" --target "staging_ceph" --force
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_QA_SMALLIZE_COM_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_QA_SMALLIZE_COM_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
+      run: |
+        echo "Attempting Hugo deploy to Ceph..."
+        if hugo deploy --config "configs/www.smallize.com.toml" --target "staging_ceph" --force; then
+          echo "✓ Hugo deploy succeeded"
+        else
+          echo "✗ Hugo deploy failed, falling back to AWS CLI..."
+
+          BUCKET="qa-smallize-com"
+          ENDPOINT="https://s3-admin-qa.dynabic.com"
+          REGION="us-east-1"
+
+          echo "Deploying to s3://$BUCKET/ via AWS CLI"
+
+          # Set multipart threshold to 100MB to avoid Ceph multipart upload issues
+          aws configure set s3.multipart_threshold 100MB
+
+          # Sync all files
+          aws s3 sync public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --delete
+
+          # Apply cache control for XML files
+          aws s3 cp public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --recursive \
+            --exclude "*" \
+            --include "*.xml" \
+            --cache-control "max-age=3600, public" \
+            --metadata-directive REPLACE
+
+          # Apply cache control for static assets (JS/CSS/SVG)
+          aws s3 cp public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --recursive \
+            --exclude "*" \
+            --include "*.js" \
+            --include "*.css" \
+            --include "*.svg" \
+            --cache-control "max-age=22880000, no-transform, public" \
+            --metadata-directive REPLACE
+
+          # Apply cache control for images
+          aws s3 cp public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --recursive \
+            --exclude "*" \
+            --include "*.png" \
+            --include "*.jpg" \
+            --include "*.ico" \
+            --cache-control "max-age=22880000, no-transform, public" \
+            --metadata-directive REPLACE
+
+          echo "✓ AWS CLI deployment completed"
+        fi
 
     - name: Deploy to Ceph (production)
       if: ${{ github.event.inputs.environment == 'production' }}
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_SMALLIZE_FAMILY_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SMALLIZE_FAMILY_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_WWW_SMALLIZE_COM_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_WWW_SMALLIZE_COM_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
       run: |
-        echo "Deploying to Ceph production..."
+        echo "Attempting Hugo deploy to Ceph..."
         if hugo deploy --config "configs/www.smallize.com.toml" --target "production_ceph" --force; then
           echo "Hugo deploy to Ceph succeeded"
         else
           echo "Hugo deploy failed, falling back to AWS CLI..."
-          aws s3 sync public/ "s3://www-smallize-com/" \
-            --endpoint-url "https://s3.dynabic.com" \
-            --region "us-east-1" \
+
+          # AWS CLI fallback for large files / multipart upload issues
+          BUCKET="www-smallize-com"
+          ENDPOINT="https://s3.dynabic.com"
+          REGION="us-east-1"
+
+          echo "Deploying to s3://$BUCKET/ via AWS CLI"
+
+          # Set multipart threshold to 100MB to avoid Ceph multipart upload issues
+          aws configure set s3.multipart_threshold 100MB
+
+          # Sync all files first
+          aws s3 sync public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
             --delete
-          echo "AWS CLI deployment completed"
+
+          # Apply cache control for XML files
+          aws s3 cp public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --recursive \
+            --exclude "*" \
+            --include "*.xml" \
+            --cache-control "max-age=3600, public" \
+            --metadata-directive REPLACE
+
+          # Apply cache control for static assets (JS/CSS/SVG)
+          aws s3 cp public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --recursive \
+            --exclude "*" \
+            --include "*.js" \
+            --include "*.css" \
+            --include "*.svg" \
+            --cache-control "max-age=22880000, no-transform, public" \
+            --metadata-directive REPLACE
+
+          # Apply cache control for images
+          aws s3 cp public/ "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --region "$REGION" \
+            --recursive \
+            --exclude "*" \
+            --include "*.png" \
+            --include "*.jpg" \
+            --include "*.ico" \
+            --cache-control "max-age=22880000, no-transform, public" \
+            --metadata-directive REPLACE
+
+          echo "AWS CLI deployment to Ceph completed"
         fi
