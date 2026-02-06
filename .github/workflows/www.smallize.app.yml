@@ -44,15 +44,15 @@ jobs:
       if: ${{ github.event.inputs.environment == 'staging' }}
       run: hugo deploy --config "configs/www.smallize.app.toml" --target "staging_ceph" --force
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_SMALLIZE_FAMILY_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SMALLIZE_FAMILY_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
 
     - name: Deploy to Ceph (production)
       if: ${{ github.event.inputs.environment == 'production' }}
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_SMALLIZE_FAMILY_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SMALLIZE_FAMILY_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
       run: |
         echo "Deploying to Ceph production..."
