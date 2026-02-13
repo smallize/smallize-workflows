@@ -42,8 +42,8 @@ jobs:
     - name: Deploy to Ceph (staging only)
       if: ${{ github.event.inputs.environment == 'staging' }}
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.QA_CEPH_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.QA_CEPH_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
       run: |
         echo "Attempting Hugo deploy to Ceph..."

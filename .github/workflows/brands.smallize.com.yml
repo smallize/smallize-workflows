@@ -43,8 +43,8 @@ jobs:
     - name: Deploy to Ceph (staging only)
       if: ${{ github.event.inputs.environment == 'staging' }}
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.CEPH_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.CEPH_SECRET_ACCESS_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.QA_CEPH_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.QA_CEPH_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
       run: |
         echo "Attempting Hugo deploy to Ceph..."
@@ -54,7 +54,7 @@ jobs:
           echo "Hugo deploy failed, falling back to AWS CLI..."
 
           BUCKET="brands-qa-smallize-com"
-          ENDPOINT="https://s3-admin-qa.dynabic.com"
+          ENDPOINT="https://s3-qa.dynabic.com"
           REGION="us-east-1"
 
           echo "Deploying to s3://$BUCKET/ via AWS CLI"
