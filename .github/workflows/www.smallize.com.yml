@@ -52,8 +52,8 @@ jobs:
         else
           echo "✗ Hugo deploy failed, falling back to AWS CLI..."
 
-          BUCKET="qa-smallize-com"
-          ENDPOINT="https://s3-admin-qa.dynabic.com"
+          BUCKET="qa.smallize.com"
+          ENDPOINT="https://s3-qa.dynabic.com"
           REGION="us-east-1"
 
           echo "Deploying to s3://$BUCKET/ via AWS CLI"
