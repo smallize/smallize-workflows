@@ -53,7 +53,7 @@ jobs:
         else
           echo "Hugo deploy failed, falling back to AWS CLI..."
 
-          BUCKET="brands-qa.smallize.com"
+          BUCKET="brands-qa-smallize-com"
           ENDPOINT="https://s3-qa.dynabic.com"
           REGION="us-east-1"
 
