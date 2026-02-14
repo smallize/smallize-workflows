@@ -35,6 +35,7 @@ jobs:
     - name: Build
       run: hugo --config "configs/brands.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ steps.base-url.outputs.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
     - name: Deploy (AWS)
+      if: ${{ github.event.inputs.environment == 'production' }}
       run: hugo deploy --config "configs/brands.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --invalidateCDN --force
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
