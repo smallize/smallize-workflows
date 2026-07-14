@@ -41,11 +41,6 @@ jobs:
         fi
     - name: Build 
       run: hugo --config "configs/about.smallize.com.toml","configs/common.smallize.com.toml" -b "${{ env.url }}" --cleanDestinationDir --minify --templateMetrics --templateMetricsHints --enableGitInfo
-    - name: Deploy
-      run: hugo deploy --config "configs/about.smallize.com.toml" --maxDeletes=-1 --target "${{ github.event.inputs.environment }}" --invalidateCDN --force
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS }}
     - name: Deploy to Ceph (staging only)
       if: ${{ github.event.inputs.environment == 'staging' }}
       run: hugo deploy --config "configs/about.smallize.com.toml" --target "staging_ceph" --force
