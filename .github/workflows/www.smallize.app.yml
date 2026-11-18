@@ -66,3 +66,13 @@ jobs:
             --delete
           echo "AWS CLI deployment completed"
         fi
+    - name: Purge BunnyCDN cache
+      env:
+        BUNNY_API_KEY: ${{ secrets.BUNNY_NET }}
+        PURGE_URL: ${{ github.event.inputs.environment == 'production' && 'https://www.smallize.app' || 'https://qa.smallize.app' }}
+      run: |
+        curl --fail-with-body --silent --show-error --get \
+          --connect-timeout 10 --max-time 60 --retry 3 \
+          -H "X-Api-Key: ${BUNNY_API_KEY}" \
+          --data-urlencode "url=${PURGE_URL}/*" \
+          "https://api.dynabic.com/bn/purge?async=true"

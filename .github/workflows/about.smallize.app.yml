@@ -46,3 +46,13 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_2 }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_2 }}
+    - name: Purge BunnyCDN cache
+      env:
+        BUNNY_API_KEY: ${{ secrets.BUNNY_NET }}
+        PURGE_URL: ${{ github.event.inputs.environment == 'production' && 'https://about.smallize.app' || 'https://about-qa.smallize.app' }}
+      run: |
+        curl --fail-with-body --silent --show-error --get \
+          --connect-timeout 10 --max-time 60 --retry 3 \
+          -H "X-Api-Key: ${BUNNY_API_KEY}" \
+          --data-urlencode "url=${PURGE_URL}/*" \
+          "https://api.dynabic.com/bn/purge?async=true"

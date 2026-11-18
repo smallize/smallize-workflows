@@ -46,7 +46,7 @@ jobs:
         else
           echo "✗ Hugo deploy failed, falling back to AWS CLI..."
 
-          BUCKET="qa.smallize.com"
+          BUCKET="qa-smallize-com"
           ENDPOINT="https://s3-qa.dynabic.com"
           REGION="us-east-1"
 
@@ -163,3 +163,13 @@ jobs:
 
           echo "AWS CLI deployment to Ceph completed"
         fi
+    - name: Purge BunnyCDN cache
+      env:
+        BUNNY_API_KEY: ${{ secrets.BUNNY_NET }}
+        PURGE_URL: ${{ github.event.inputs.environment == 'production' && 'https://www.smallize.com' || 'https://qa.smallize.com' }}
+      run: |
+        curl --fail-with-body --silent --show-error --get \
+          --connect-timeout 10 --max-time 60 --retry 3 \
+          -H "X-Api-Key: ${BUNNY_API_KEY}" \
+          --data-urlencode "url=${PURGE_URL}/*" \
+          "https://api.dynabic.com/bn/purge?async=true"
